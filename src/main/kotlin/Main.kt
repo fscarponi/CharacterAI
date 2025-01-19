@@ -1,10 +1,15 @@
-package org.example
+package it.fscarponi
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.example.model.Character
-import org.example.service.HuggingFaceAIService
-import org.example.data.CharacterRepository
-import org.example.data.SQLiteCharacterRepository
+import it.fscarponi.model.Character
+import it.fscarponi.service.HuggingFaceAIService
+import it.fscarponi.data.CharacterRepository
+import it.fscarponi.data.SQLiteCharacterRepository
+import it.fscarponi.telegram.CharacterAIBot
+import it.fscarponi.ui.*
+import org.telegram.telegrambots.meta.TelegramBotsApi
+import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 
 fun createCustomCharacter(): Character {
     printColored("\n=== Character Creation ===", COLOR_HEADER)
@@ -86,18 +91,6 @@ fun displayCharacterPreview(character: Character) {
     printColored("=====================", COLOR_HEADER)
 }
 
-// Color constants for consistent UI
-private const val COLOR_HEADER = "32"    // Green
-private const val COLOR_PROMPT = "36"    // Cyan
-private const val COLOR_INFO = "37"      // White
-private const val COLOR_WARNING = "33"   // Yellow
-private const val COLOR_ERROR = "31"     // Red
-private const val COLOR_SUCCESS = "32"   // Green
-
-fun printColored(text: String, color: String) {
-    println("\u001B[${color}m$text\u001B[0m")
-}
-
 fun showHelp() {
     printColored("\n=== Help & Commands ===", COLOR_HEADER)
 
@@ -145,6 +138,7 @@ suspend fun selectCharacter(repository: CharacterRepository): Character {
                 printColored("4. You can preview a character before confirming", COLOR_INFO)
                 continue
             }
+
             "custom" -> {
                 val newCharacter = createCustomCharacter()
                 printColored("\nConfirm character creation? (yes/no):", COLOR_PROMPT)
@@ -157,6 +151,7 @@ suspend fun selectCharacter(repository: CharacterRepository): Character {
                     continue
                 }
             }
+
             else -> {
                 val index = input.toIntOrNull()?.let { it - 1 }
                 if (index != null && index in availableCharacters.indices) {
@@ -180,17 +175,26 @@ suspend fun selectCharacter(repository: CharacterRepository): Character {
     }
 }
 
-fun main() = runBlocking {
-    val repository: CharacterRepository = SQLiteCharacterRepository()
-    repository.initialize()
+private fun initializeTelegramBot(repository: CharacterRepository, aiService: HuggingFaceAIService) {
+    try {
+        val botsApi = TelegramBotsApi(DefaultBotSession::class.java)
+        val bot = CharacterAIBot(repository, aiService)
+        botsApi.registerBot(bot)
+        printColored("\n=== Telegram Bot Started ===", COLOR_SUCCESS)
+        printColored("The bot is now available on Telegram", COLOR_INFO)
+    } catch (e: Exception) {
+        printColored("Failed to start Telegram bot: ${e.message}", COLOR_ERROR)
+        e.printStackTrace()
+    }
+}
 
+private suspend fun startCliInterface(repository: CharacterRepository, aiService: HuggingFaceAIService) {
     // Display welcome banner
     printColored("\n=== Welcome to Character AI ===", COLOR_HEADER)
     printColored("An immersive role-playing experience with AI-powered characters", COLOR_INFO)
     printColored("============================================", COLOR_HEADER)
 
     val character = selectCharacter(repository)
-    val aiService = HuggingFaceAIService()
 
     printColored("\n=== Session Started ===", COLOR_HEADER)
     printColored("You are now interacting with:", COLOR_INFO)
@@ -208,15 +212,18 @@ fun main() = runBlocking {
                 printColored("Thank you for using Character AI!", COLOR_SUCCESS)
                 break
             }
+
             "help" -> showHelp()
             "status" -> {
                 printColored("\n=== Character Status ===", COLOR_HEADER)
                 displayCharacterPreview(character)
             }
+
             "clear" -> {
                 println("\n".repeat(50))
                 printColored("=== Conversation Cleared ===", COLOR_SUCCESS)
             }
+
             else -> try {
                 val response = aiService.generateResponse(character, input)
                 printColored("\n${character.name}: ", COLOR_PROMPT)
@@ -225,6 +232,38 @@ fun main() = runBlocking {
                 printColored("Error: ${e.message}", COLOR_ERROR)
                 printColored("Please try again or type 'help' for available commands.", COLOR_WARNING)
             }
+        }
+    }
+}
+
+fun main(args: Array<String>) = runBlocking {
+    if (args.isEmpty()) {
+        printColored("Error: Please specify --cli or --telegram as an argument", COLOR_ERROR)
+        return@runBlocking
+    }
+
+    val repository: CharacterRepository = SQLiteCharacterRepository()
+    repository.initialize()
+    val aiService = HuggingFaceAIService()
+
+    when (args[0].lowercase()) {
+        "--cli" -> {
+            printColored("Starting CLI interface...", COLOR_INFO)
+            startCliInterface(repository, aiService)
+        }
+
+        "--telegram" -> {
+            printColored("Starting Telegram bot...", COLOR_INFO)
+            initializeTelegramBot(repository, aiService)
+            // Keep the application running
+            while (true) {
+                delay(1000)
+            }
+        }
+
+        else -> {
+            printColored("Error: Invalid argument. Please use --cli or --telegram", COLOR_ERROR)
+            return@runBlocking
         }
     }
 }

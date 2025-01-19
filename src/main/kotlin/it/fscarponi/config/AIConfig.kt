@@ -1,4 +1,4 @@
-package org.example.config
+package it.fscarponi.config
 
 object AIConfig {
     // Hugging Face API endpoint for Mistral model

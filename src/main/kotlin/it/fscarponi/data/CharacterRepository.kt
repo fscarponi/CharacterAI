@@ -1,14 +1,11 @@
-package org.example.data
+package it.fscarponi.data
 
-import org.example.model.Character
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
+import it.fscarponi.model.Character
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonPrimitive
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.transactions.transaction
 
 interface CharacterRepository {
     suspend fun initialize()
@@ -33,16 +30,11 @@ object Characters : Table() {
     override val primaryKey = PrimaryKey(name)
 }
 
-class SQLiteCharacterRepository(private val dbPath: String = "characters.db") : CharacterRepository {
-    private val json = Json { prettyPrint = true }
-    private val database: Database
-
-    init {
-        database = Database.connect(
-            url = "jdbc:sqlite:$dbPath",
-            driver = "org.sqlite.JDBC",
-        )
-    }
+class SQLiteCharacterRepository(dbPath: String = "characters.db") : CharacterRepository {
+    private val database: Database = Database.connect(
+        url = "jdbc:sqlite:$dbPath",
+        driver = "org.sqlite.JDBC",
+    )
 
     init {
         transaction(database) {

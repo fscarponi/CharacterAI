@@ -1,4 +1,4 @@
-package org.example.model
+package it.fscarponi.model
 
 data class Character(
     val name: String,

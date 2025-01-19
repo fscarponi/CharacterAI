@@ -1,10 +1,10 @@
-package org.example.data
+package it.fscarponi.data
 
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import org.example.model.Character
+import it.fscarponi.model.Character
 import kotlin.test.*
 import java.io.File
 
@@ -22,7 +22,7 @@ class CharacterRepositoryTest {
     private fun cleanupDatabase() {
         runCatching {
             if (this::repository.isInitialized) {
-                runBlocking { 
+                runBlocking {
                     repository.cleanup()
                 }
             }
@@ -48,15 +48,17 @@ class CharacterRepositoryTest {
         // Add a test character with retry logic
         repeat(3) { attempt ->
             try {
-                repository.addCharacter(Character(
-                    name = "Test Wizard",
-                    role = "wizard",
-                    personality = "wise and mysterious",
-                    background = "A test character for unit tests",
-                    knowledge = listOf("magic", "testing"),
-                    goals = listOf("help with tests"),
-                    connections = listOf("test framework")
-                ))
+                repository.addCharacter(
+                    Character(
+                        name = "Test Wizard",
+                        role = "wizard",
+                        personality = "wise and mysterious",
+                        background = "A test character for unit tests",
+                        knowledge = listOf("magic", "testing"),
+                        goals = listOf("help with tests"),
+                        connections = listOf("test framework")
+                    )
+                )
                 return@repeat
             } catch (e: Exception) {
                 if (attempt == 2) throw e
@@ -163,7 +165,7 @@ class CharacterRepositoryTest {
         try {
             repository.addCharacter(duplicateCharacter)
             fail("Should not allow duplicate character names")
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // Expected exception
         }
 

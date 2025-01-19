@@ -14,7 +14,7 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    testImplementation("ch.qos.logback:logback-classic:1.4.11")
+    testImplementation("ch.qos.logback:logback-classic:1.4.12")
 
     // Ktor client
     implementation("io.ktor:ktor-client-core:2.3.7")
@@ -38,7 +38,7 @@ dependencies {
 
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.9")
-    implementation("ch.qos.logback:logback-classic:1.4.11")
+    implementation("ch.qos.logback:logback-classic:1.4.12")
 
     // SQLite and Exposed
     implementation("org.jetbrains.exposed:exposed-core:0.45.0")
@@ -46,6 +46,9 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:0.45.0")
     implementation("org.xerial:sqlite-jdbc:3.44.1.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
+
+    // Telegram Bot
+    implementation("org.telegram:telegrambots:6.8.0")
 }
 
 tasks.test {

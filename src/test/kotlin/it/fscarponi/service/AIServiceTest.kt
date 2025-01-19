@@ -1,10 +1,10 @@
-package org.example.service
+package it.fscarponi.service
 
 import kotlinx.coroutines.runBlocking
-import org.example.model.Character
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import it.fscarponi.model.Character
 
 class MockAIService : AIService {
     override suspend fun generateResponse(character: Character, userInput: String): String {

@@ -1,50 +1,20 @@
-package org.example.service
+package it.fscarponi.service
 
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
-import io.ktor.client.request.*
 import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.request.*
 import io.ktor.http.*
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerialName
-import org.example.config.AIConfig
-import org.example.model.Character
-
-@Serializable
-data class Message(
-    val role: String,
-    val content: String
-)
-
-@Serializable
-data class ChatChoice(
-    val message: Message
-)
-
-@Serializable
-data class ChatResponse(
-    val choices: List<ChatChoice>
-)
-
-@Serializable
-data class ChatRequest(
-    val model: String = "mistralai/Mistral-Nemo-Instruct-2407",
-    val messages: List<Message>,
-    val temperature: Double = 0.5,    // Default from example
-    val max_tokens: Int = 2048,       // Default from example
-    val top_p: Double = 0.7          // Default from example
-)
-
-interface AIService {
-    suspend fun generateResponse(character: Character, userInput: String): String
-}
+import io.ktor.serialization.kotlinx.json.*
+import kotlinx.serialization.json.Json
+import it.fscarponi.config.AIConfig
+import it.fscarponi.model.Character
 
 class HuggingFaceAIService : AIService {
     private val client = HttpClient(CIO) {
-        install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-            json(kotlinx.serialization.json.Json {
+        install(ContentNegotiation) {
+            json(Json {
                 prettyPrint = true
                 isLenient = true
                 ignoreUnknownKeys = true
@@ -59,7 +29,10 @@ class HuggingFaceAIService : AIService {
     private fun initializeSystemMessage(character: Character) {
         val systemPrompt = """
             You are roleplaying as a character with these traits:
-            ${character.toString()}
+            Name: ${character.name}
+            Role: ${character.role}
+            Personality: ${character.personality}
+            Background: ${character.background}
 
             Guidelines:
             - Stay in character and use first person
@@ -109,5 +82,10 @@ class HuggingFaceAIService : AIService {
             }
             throw e
         }
+    }
+
+    fun cleanup() {
+        client.close()
+        messageHistory.clear()
     }
 }

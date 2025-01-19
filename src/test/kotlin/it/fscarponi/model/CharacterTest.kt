@@ -1,4 +1,4 @@
-package org.example.model
+package it.fscarponi.model
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
