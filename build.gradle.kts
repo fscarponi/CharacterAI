@@ -59,5 +59,5 @@ kotlin {
 }
 
 application {
-    mainClass.set("org.example.MainKt")
+    mainClass.set("it.fscarponi.MainKt")
 }
