@@ -33,6 +33,6 @@ jobs:
           name: Release ${{ github.ref_name }}
           body: "New release generated automatically."
           files: |
-            build/distributions/*
+            build/distributions/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
