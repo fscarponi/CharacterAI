@@ -13,7 +13,7 @@ object AIConfig {
 
     // Read API token from local.properties
     val API_TOKEN: String by lazy {
-        System.getenv("TELEGRAM_BOT_TOKEN") ?: run{
+        System.getenv("huggingface.api.token") ?: run{
         val properties = java.util.Properties()
         val propertiesFile = java.io.File("local.properties")
         if (!propertiesFile.exists()) {
