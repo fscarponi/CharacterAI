@@ -242,18 +242,41 @@ Run the tests using:
 src/
 ├── main/
 │   └── kotlin/
-│       └── org/example/
-│           ├── config/      # Configuration classes
-│           ├── data/        # Data access and repository
-│           ├── model/       # Domain models
-│           └── service/     # Business logic and AI service
+│       └── it/fscarponi/
+│           ├── config/      # Configuration classes and AI settings
+│           ├── data/        # Data access and character repository
+│           ├── model/       # Domain models and character templates
+│           └── service/     # Business logic and AI service integration
 └── test/
     └── kotlin/
-        └── org/example/
+        └── it/fscarponi/
             ├── data/        # Repository tests
             ├── model/       # Model tests
             └── service/     # Service tests
 ```
+
+### Configuration
+The application requires several configuration settings:
+
+1. **Environment Variables**:
+   - `HUGGINGFACE_API_TOKEN`: Your HuggingFace API access token
+
+2. **Configuration Files**:
+   - `local.properties`: Local development settings
+   - `gradle.properties`: Gradle-specific configurations
+
+### AI Model Details
+The system uses the Mistral-Nemo-Instruct model, which provides:
+- Advanced natural language understanding
+- Consistent personality maintenance
+- Context-aware responses
+- Support for role-playing scenarios
+- Memory of previous interactions
+
+The model is accessed through HuggingFace's API, ensuring:
+- Reliable response generation
+- Scalable performance
+- Regular model updates and improvements
 
 ### Database
 The application uses SQLite for persistent storage:
