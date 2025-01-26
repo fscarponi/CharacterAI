@@ -6,7 +6,7 @@ plugins {
     id("io.github.lamba92.docker") version "1.0.0-RC.2"
 }
 
-group = "org.example"
+group = "it.fscarponi"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -64,20 +64,22 @@ application {
     mainClass.set("it.fscarponi.MainKt")
 }
 
-tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-    archiveFileName.set("characterai_bot.jar")
-}
 
 docker {
     registries {
         githubContainerRegistry("fscarponi")
     }
 
-    images{
-        main{
+    images {
+        main {
+            val version = System.getenv("RELEASE_TAG")?.removePrefix("v")
             imageName = "characterai_bot" // default
-            isLatestTag = true // default, if true, the image will have an additional tag`latest`
-            platforms = listOf("linux/amd64", "linux/arm64") // default, used for task `dockerBuildxBuild` and `dockerBuildxPublish`
+            imageVersion = version ?: project.version.toString()
+            isLatestTag = false // default, if true, the image will have an additional tag`latest`
+            platforms = listOf(
+                "linux/amd64",
+                "linux/arm64"
+            )
         }
     }
 

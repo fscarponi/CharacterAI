@@ -36,3 +36,9 @@ jobs:
             build/distributions/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create And Publish Docker Image in ghcr
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        id: publish image
+        run: ./gradlew dockerPublishMainToGhcr
