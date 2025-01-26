@@ -46,7 +46,7 @@ class HuggingFaceAIService : AIService {
             - Show personality through responses
             - Maintain consistent behavior
             - For direct questions, please provide direct and concise answers
-            - Try to answer direct questions directly and briefly.
+            - Don't be verbose
         """.trimIndent()
 
         messageHistory.clear() // Clear previous history
