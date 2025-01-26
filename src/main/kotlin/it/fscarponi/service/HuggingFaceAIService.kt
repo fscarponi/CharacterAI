@@ -1,62 +1,32 @@
 package it.fscarponi.service
 
-import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.json.Json
+import it.fscarponi.ai.SystemPrompt
 import it.fscarponi.config.AIConfig
+import it.fscarponi.config.HttpClientProvider
 import it.fscarponi.model.Character
 
-class HuggingFaceAIService : AIService {
-    private val client = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = true
-                ignoreUnknownKeys = true
-            })
-        }
-    }
+class HuggingFaceAIService(
+    private val client: io.ktor.client.HttpClient = HttpClientProvider.client
+) : AIService {
 
     // Store conversation history
     private val messageHistory = mutableListOf<Message>()
 
     // Initialize system message when starting conversation with a character
-    private fun initializeSystemMessage(character: Character) {
-        val systemPrompt = """
-            You are roleplaying as a character with these traits:
-            Name: ${character.name}
-            Role: ${character.role}
-            Personality: ${character.personality}
-            Background: ${character.background}
-            Knowledge: ${character.knowledge.joinToString("\n            - ", prefix = "\n            - ")}
-            Goals: ${character.goals.joinToString("\n            - ", prefix = "\n            - ")}
-            Secrets: ${character.secrets.joinToString("\n            - ", prefix = "\n            - ")}
-            Connections: ${character.connections.joinToString("\n            - ", prefix = "\n            - ")}
-
-            Guidelines:
-            - Stay in character and use first person
-            - Express actions in *asterisks*
-            - Use character-specific speech patterns
-            - Reference your background naturally
-            - Show personality through responses
-            - Maintain consistent behavior
-            - For direct questions, please provide direct and concise answers
-            - Don't be verbose
-        """.trimIndent()
-
+    private fun initializeSystemMessage(character: Character, language: String = "english") {
+        val systemPrompt = SystemPrompt.generatePrompt(character, language)
         messageHistory.clear() // Clear previous history
         messageHistory.add(Message(role = "system", content = systemPrompt))
     }
 
-    override suspend fun generateResponse(character: Character, userInput: String): String {
+    override suspend fun generateResponse(character: Character, userInput: String, language: String): String {
         // Initialize or reinitialize if system message is different
         if (messageHistory.isEmpty()) {
-            initializeSystemMessage(character)
+            initializeSystemMessage(character, language)
         }
 
         // Add user message to history
@@ -66,9 +36,11 @@ class HuggingFaceAIService : AIService {
             val response = client.post("${AIConfig.HUGGINGFACE_API_URL}${AIConfig.DEFAULT_MODEL}/v1/chat/completions") {
                 contentType(ContentType.Application.Json)
                 header("Authorization", "Bearer ${AIConfig.API_TOKEN}")
-                setBody(ChatRequest(
-                    messages = messageHistory.toList()
-                ))
+                setBody(
+                    ChatRequest(
+                        messages = messageHistory.toList()
+                    )
+                )
             }
 
             val chatResponse: ChatResponse = response.body()
@@ -91,7 +63,6 @@ class HuggingFaceAIService : AIService {
     }
 
     fun cleanup() {
-        client.close()
         messageHistory.clear()
     }
 }

@@ -1,5 +1,6 @@
 package it.fscarponi
 
+import it.fscarponi.config.HttpClientProvider
 import it.fscarponi.data.CharacterRepository
 import it.fscarponi.data.SQLiteCharacterRepository
 import it.fscarponi.model.Character
@@ -196,6 +197,23 @@ private suspend fun startCliInterface(repository: CharacterRepository, aiService
 
     val character = selectCharacter(repository)
 
+    // Language selection
+    val supportedLanguages = setOf("english", "italian", "spanish", "french")
+    var selectedLanguage: String
+    while (true) {
+        printColored("\nSelect your preferred language (default: english):", COLOR_PROMPT)
+        printColored("Available languages: ${supportedLanguages.joinToString(", ")}", COLOR_INFO)
+        printColored("Press Enter for English or type your choice: ", COLOR_PROMPT)
+        selectedLanguage = readlnOrNull()?.lowercase()?.takeIf { it.isNotBlank() } ?: "english"
+
+        if (selectedLanguage in supportedLanguages) {
+            printColored("Language set to: $selectedLanguage", COLOR_SUCCESS)
+            break
+        } else {
+            printColored("Invalid language selection. Please try again.", COLOR_ERROR)
+        }
+    }
+
     printColored("\n=== Session Started ===", COLOR_HEADER)
     printColored("You are now interacting with:", COLOR_INFO)
     displayCharacterPreview(character)
@@ -225,7 +243,7 @@ private suspend fun startCliInterface(repository: CharacterRepository, aiService
             }
 
             else -> try {
-                val response = aiService.generateResponse(character, input)
+                val response = aiService.generateResponse(character, input, selectedLanguage)
                 printColored("\n${character.name}: ", COLOR_PROMPT)
                 printColored(response, COLOR_INFO)
             } catch (e: Exception) {
@@ -262,4 +280,5 @@ fun main(args: Array<String>) = runBlocking {
         }
 
     }
+    HttpClientProvider.cleanup()
 }

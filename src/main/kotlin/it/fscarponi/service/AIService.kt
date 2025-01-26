@@ -29,5 +29,5 @@ data class ChatRequest(
 )
 
 interface AIService {
-    suspend fun generateResponse(character: Character, userInput: String): String
+    suspend fun generateResponse(character: Character, userInput: String, language: String = "english"): String
 }
