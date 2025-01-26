@@ -5,6 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class CharacterTest {
+
     @Test
     fun `test character creation and toString format`() {
         // Given

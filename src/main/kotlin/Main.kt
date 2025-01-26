@@ -1,13 +1,13 @@
 package it.fscarponi
 
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import it.fscarponi.model.Character
-import it.fscarponi.service.HuggingFaceAIService
 import it.fscarponi.data.CharacterRepository
 import it.fscarponi.data.SQLiteCharacterRepository
+import it.fscarponi.model.Character
+import it.fscarponi.service.HuggingFaceAIService
 import it.fscarponi.telegram.CharacterAIBot
 import it.fscarponi.ui.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.telegram.telegrambots.meta.TelegramBotsApi
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 
@@ -237,22 +237,22 @@ private suspend fun startCliInterface(repository: CharacterRepository, aiService
 }
 
 fun main(args: Array<String>) = runBlocking {
-    if (args.isEmpty()) {
-        printColored("Error: Please specify --cli or --telegram as an argument", COLOR_ERROR)
-        return@runBlocking
-    }
+    val mode = if (args.isEmpty()) {
+        printColored("no argoment provided-> running as telegram bot", COLOR_ERROR)
+        "--telegram"
+    } else args[0]
 
     val repository: CharacterRepository = SQLiteCharacterRepository()
     repository.initialize()
     val aiService = HuggingFaceAIService()
 
-    when (args[0].lowercase()) {
+    when (mode) {
         "--cli" -> {
             printColored("Starting CLI interface...", COLOR_INFO)
             startCliInterface(repository, aiService)
         }
 
-        "--telegram" -> {
+        else -> {
             printColored("Starting Telegram bot...", COLOR_INFO)
             initializeTelegramBot(repository, aiService)
             // Keep the application running
@@ -261,9 +261,5 @@ fun main(args: Array<String>) = runBlocking {
             }
         }
 
-        else -> {
-            printColored("Error: Invalid argument. Please use --cli or --telegram", COLOR_ERROR)
-            return@runBlocking
-        }
     }
 }

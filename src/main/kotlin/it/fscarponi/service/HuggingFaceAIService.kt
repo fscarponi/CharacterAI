@@ -33,6 +33,10 @@ class HuggingFaceAIService : AIService {
             Role: ${character.role}
             Personality: ${character.personality}
             Background: ${character.background}
+            Knowledge: ${character.knowledge.joinToString("\n            - ", prefix = "\n            - ")}
+            Goals: ${character.goals.joinToString("\n            - ", prefix = "\n            - ")}
+            Secrets: ${character.secrets.joinToString("\n            - ", prefix = "\n            - ")}
+            Connections: ${character.connections.joinToString("\n            - ", prefix = "\n            - ")}
 
             Guidelines:
             - Stay in character and use first person
@@ -41,6 +45,8 @@ class HuggingFaceAIService : AIService {
             - Reference your background naturally
             - Show personality through responses
             - Maintain consistent behavior
+            - For direct questions, please provide direct and concise answers
+            - Try to answer direct questions directly and briefly.
         """.trimIndent()
 
         messageHistory.clear() // Clear previous history

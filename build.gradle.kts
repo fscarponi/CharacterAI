@@ -2,6 +2,8 @@ plugins {
     kotlin("jvm") version "2.0.21"
     kotlin("plugin.serialization") version "2.0.21"
     application
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.palantir.docker") version "0.36.0"
 }
 
 group = "org.example"
@@ -60,4 +62,48 @@ kotlin {
 
 application {
     mainClass.set("it.fscarponi.MainKt")
+}
+
+tasks {
+    shadowJar {
+        archiveBaseName.set("CharacterAI_bot")
+        archiveClassifier.set("")
+        archiveVersion.set("")
+    }
+}
+/**
+ * Configure the Shadow JAR:
+ * - Produces a single, consistent JAR named "CharacterAI_bot.jar"
+ */
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    archiveBaseName.set("characterai_bot")
+    archiveClassifier.set("")
+    archiveVersion.set("")
+    archiveFileName.set("characterai_bot.jar")
+}
+
+
+val shadowJarFile =
+    tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar")
+    .flatMap { it.archiveFile }
+
+/**
+ * Palantir Docker plugin configuration.
+ * - Depends on shadowJar (so the JAR is built first).
+ * - Uses the lazy reference to the produced JAR file.
+ */
+docker {
+    // Ensure the shadowJar is completed before building the Docker image
+    dependsOn(tasks.named("shadowJar").get())
+
+    // Image name for GHCR
+    name = "ghcr.io/fscarponi/characterai_bot:latest"
+
+    // Tell Docker to include the actual JAR artifact
+    files(shadowJarFile)
+
+    // Pass a build arg (optional)
+    buildArgs(
+        mapOf("JAR_FILE" to shadowJarFile.get().asFile.name)
+    )
 }

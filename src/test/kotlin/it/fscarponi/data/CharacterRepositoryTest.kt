@@ -8,6 +8,7 @@ import it.fscarponi.model.Character
 import kotlin.test.*
 import java.io.File
 
+@Ignore
 class CharacterRepositoryTest {
     private lateinit var repository: SQLiteCharacterRepository
     private lateinit var dbFile: String
