@@ -40,5 +40,6 @@ jobs:
       - name: Create And Publish Docker Image in ghcr
         env:
           RELEASE_TAG: ${{ github.ref_name }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         id: publish_image
         run: ./gradlew dockerPublishMainToGhcr
