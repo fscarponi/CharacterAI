@@ -29,6 +29,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
       - name: Create And Publish Docker Image in ghcr
         env:
           RELEASE_TAG: ${{ github.ref_name }}
@@ -46,7 +49,3 @@ jobs:
             build/distributions/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#
-#
-#      - name: Log in to GHCR
-#        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin˚
