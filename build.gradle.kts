@@ -78,8 +78,8 @@ docker {
             isLatestTag = false // default, if true, the image will have an additional tag`latest`
             platforms = listOf(
                 "linux/amd64",
+                "linux/amd64/v8",
                 "linux/arm64",
-                "linux/arm64/v8"
             )
         }
     }
