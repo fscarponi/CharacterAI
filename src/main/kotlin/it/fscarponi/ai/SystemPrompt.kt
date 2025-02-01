@@ -1,12 +1,13 @@
 package it.fscarponi.ai
 
+import io.ktor.client.call.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
 import it.fscarponi.config.AIConfig
 import it.fscarponi.config.HttpClientProvider
 import it.fscarponi.model.Character
 import it.fscarponi.service.ChatRequest
+import it.fscarponi.service.ChatResponse
 import it.fscarponi.service.Message
 import kotlinx.coroutines.runBlocking
 
@@ -27,7 +28,7 @@ object SystemPrompt {
             - Don't repeat yourself
         """
 
-    private fun generateCharacterPrompt(character: Character) {
+    private fun generateCharacterPrompt(character: Character) =
         """
             You are roleplaying as a character with these traits:
             Name: ${character.name}
@@ -41,7 +42,7 @@ object SystemPrompt {
         
             Roleplay is now starting! don't leave your character!
         """.trimIndent()
-    }
+
 
     private fun fullPrompt(character: Character): String =
         """
@@ -65,26 +66,28 @@ object SystemPrompt {
     }
 
     private fun localizePrompt(prompt: String, language: String): String = runBlocking {
-//todo this is not working, pass through!
-//        val prompt =
-//            HttpClientProvider.client.post("${AIConfig.HUGGINGFACE_API_URL}${AIConfig.DEFAULT_MODEL}/v1/chat/completions") {
-//                contentType(ContentType.Application.Json)
-//                header("Authorization", "Bearer ${AIConfig.API_TOKEN}")
-//                setBody(
-//                    body = ChatRequest(
-//                        messages = listOf(
-//                            Message(
-//                                role = "user",
-//                                content = "Translate in ${language} the following text: ${prompt}"
-//                            )
-//                        )
-//                    )
-//                )
-//            }.bodyAsText()
+        val response =
+            HttpClientProvider.client.post("${AIConfig.HUGGINGFACE_API_URL}${AIConfig.DEFAULT_MODEL}/v1/chat/completions") {
+                contentType(ContentType.Application.Json)
+                header("Authorization", "Bearer ${AIConfig.API_TOKEN}")
+                setBody(
+                    body = ChatRequest(
+                        messages = listOf(
+                            Message(
+                                role = "user",
+                                content = "Translate in ${language} the following text: ${prompt}"
+                            )
+                        )
+                    )
+                )
+            }
+        val chatResponse: ChatResponse = response.body()
+        val assistantTranslation = chatResponse.choices.firstOrNull()?.message?.content
 
-        println(prompt)
+//        printColored("translated prompt", COLOR_PROMPT)
+//        printColored(assistantTranslation ?: "no translation provided", COLOR_PROMPT)
 
-        return@runBlocking prompt
+        return@runBlocking assistantTranslation ?: prompt
     }
 
 
