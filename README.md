@@ -19,12 +19,24 @@ A Kotlin-based AI character system that allows users to create and interact with
 
 ## Features
 
+### Core Features
 - Create custom characters with unique traits
 - Choose from predefined character templates (Wizard, Warrior, Rogue)
-- Interactive text-based conversation with colored output
-- AI-powered responses using HuggingFace's API
-- Command system (help, clear, exit)
+- AI-powered responses using HuggingFace's Mistral-Nemo-Instruct model
+- Persistent character storage using SQLite database
+- Multi-language support (English, Italian, Spanish, French)
+
+### Interface Options
+- Interactive CLI with colored output
+- Telegram bot integration
+- Docker support for containerized deployment
+
+### Interaction Features
+- Rich command system for both CLI and Telegram
+- Character persistence across sessions
+- Context-aware conversation handling
 - Error handling and graceful degradation
+- Support for multiple concurrent users in Telegram mode
 
 ## Available Character Templates
 
@@ -87,52 +99,141 @@ A Kotlin-based AI character system that allows users to create and interact with
 - JDK 17 or higher
 - Kotlin 2.0.21 or higher
 - HuggingFace API token
+- Docker (optional, for containerized deployment)
+- Telegram Bot Token (optional, for Telegram integration)
 
 ## Setup
 
 1. Clone the repository
-2. Get your HuggingFace API token from [huggingface.co](https://huggingface.co)
-3. Set the environment variable:
+
+2. Configure API tokens:
+   - Get your HuggingFace API token from [huggingface.co](https://huggingface.co)
+   - If using Telegram, create a bot and get token from [BotFather](https://t.me/botfather)
+
+3. Set environment variables:
    ```bash
+   # Required
    export HUGGINGFACE_API_TOKEN=your_token_here
+
+   # Optional (for Telegram integration)
+   export TELEGRAM_BOT_TOKEN=your_telegram_token_here
    ```
 
+4. For Docker deployment:
+   - Ensure Docker is installed and running
+   - Configure GitHub Container Registry authentication if needed
+
 ## Running the Application
+
+### Local Development
 
 1. Build the project:
    ```bash
    ./gradlew build
    ```
 
-2. Run the application:
+2. Run the application (defaults to Telegram bot mode):
    ```bash
    ./gradlew run
    ```
+
+3. Run in CLI mode:
+   ```bash
+   ./gradlew run --args="--cli"
+   ```
+
+The application supports two primary modes:
+- **CLI Mode**: Interactive command-line interface with colored output
+- **Telegram Bot Mode**: Bot interface accessible through Telegram (default mode)
+
+### Language Support
+
+The application supports multiple languages for character interactions:
+- English (default)
+- Italian
+- Spanish
+- French
+
+Language can be selected during character interaction in CLI mode or through Telegram commands.
+
+### Telegram Bot Integration (Default Mode)
+
+1. Start the application with Telegram Bot token:
+   ```bash
+   export TELEGRAM_BOT_TOKEN=your_telegram_token_here
+   ./gradlew run
+   ```
+
+2. Find your bot on Telegram using the username you set up with BotFather
+
+3. Start chatting with your AI characters through Telegram!
+
+### Docker Deployment
+
+1. Configure GitHub Container Registry authentication:
+   ```bash
+   echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+   ```
+
+2. Build the Docker image:
+   ```bash
+   ./gradlew buildImage
+   ```
+
+3. Run the containerized application:
+   ```bash
+   docker run \
+     -e HUGGINGFACE_API_TOKEN=your_token_here \
+     -e TELEGRAM_BOT_TOKEN=your_telegram_token_here \
+     ghcr.io/fscarponi/characterai_bot:version
+   ```
+
+Note: Replace `version` with the actual version tag (e.g., `1.0.0`) or use `latest` for the most recent version.
+The application automatically publishes Docker images to GitHub Container Registry when new releases are tagged.
 
 ## Usage
 
-1. Start the application:
-   ```bash
-   ./gradlew run
-   ```
+### CLI Mode Commands
 
-2. Choose your character:
+When running in CLI mode (`./gradlew run --args="--cli"`), the following commands are available:
+
+1. Character Selection:
    - Select a template by typing: `wizard`, `warrior`, or `rogue`
-   - Or type `custom` to create your own character
+   - Type `custom` to create your own character
 
-3. If creating a custom character, provide:
-   - Name
+2. Available Commands:
+   - `help` - Show available commands
+   - `status` - Display current character information
+   - `clear` - Clear the conversation history
+   - `exit` - End the conversation
+
+3. Language Selection:
+   - Choose your preferred language at startup
+   - Available options: English (default), Italian, Spanish, French
+
+### Telegram Bot Commands
+
+When using the Telegram bot interface, the following commands are available:
+
+1. Basic Commands:
+   - `/start` - Start the bot and get initial instructions
+   - `/help` - Show available commands
+   - `/create` - Create a custom character
+   - `/select` - Choose a character to interact with
+   - `/stopchat` - End the current conversation
+   - `/cancel` - Cancel the current operation
+
+2. Character Creation:
+   When using `/create`, you'll be prompted to provide:
+   - Character name
    - Role (e.g., warrior, wizard, merchant)
    - Personality traits
    - Background story
 
-4. Interact with your character using:
-   - Type any message to talk to your character
-   - Available commands:
-     * `help` - Show available commands
-     * `status` - Display current character information
-     * `clear` - Clear the conversation history
-     * `exit` - End the conversation
+3. Interaction:
+   - Simply type messages to chat with your selected character
+   - The bot supports multiple languages (English, Italian, Spanish, French)
+   - Each chat maintains its own character selection and conversation history
 
 ## Role-Playing Tips
 
@@ -162,9 +263,18 @@ A Kotlin-based AI character system that allows users to create and interact with
    - Seek their help in reaching important figures
 
 6. **Command Usage**:
+   CLI Mode:
    - Use `status` to review character details
    - Use `clear` to maintain conversation focus
-   - Check `help` for available commands
+   - Use `help` to see available commands
+   - Use `exit` to end the session
+
+   Telegram Mode:
+   - Use `/select` to choose or switch characters
+   - Use `/create` to create custom characters
+   - Use `/help` to see available commands
+   - Use `/stopchat` to end the current conversation
+   - Use `/cancel` to abort current operation
 
 ## Example Interaction
 
@@ -223,18 +333,71 @@ Just type your message and press Enter to talk to the character
 
 ## Testing
 
-Run the tests using:
-```bash
-./gradlew test
-```
+The project includes comprehensive test coverage across all major components:
+
+### Running Tests
+
+1. Run all tests:
+   ```bash
+   ./gradlew test
+   ```
+
+2. Run specific test categories:
+   ```bash
+   # Run configuration tests
+   ./gradlew test --tests "*.config.*"
+
+   # Run repository tests
+   ./gradlew test --tests "*.data.*"
+
+   # Run model tests
+   ./gradlew test --tests "*.model.*"
+
+   # Run service tests
+   ./gradlew test --tests "*.service.*"
+
+   # Run UI tests
+   ./gradlew test --tests "*.ui.*"
+   ```
+
+### Test Categories
+
+- **Configuration Tests**: Verify proper loading and validation of configuration settings
+- **Repository Tests**: Ensure correct character data persistence and retrieval
+- **Model Tests**: Validate character model behavior and constraints
+- **Service Tests**: Check AI integration and response generation
+- **UI Tests**: Verify both CLI and Telegram bot interface functionality
+
+The project uses JUnit for testing and includes both unit tests and integration tests. Mock implementations are provided for external dependencies like the HuggingFace API for testing purposes.
 
 ## Technical Details
 
-- Uses Kotlin Coroutines for asynchronous operations
+- Uses Kotlin 2.0.21 with Coroutines for asynchronous operations
 - Implements the HuggingFace API for AI responses
 - Uses Ktor client for HTTP communications
 - Includes both production and mock implementations for testing
-- SQLite database for persistent character storage
+- SQLite database with Exposed ORM for persistent character storage
+- Telegram Bot integration for chat platform support
+- Docker support with GitHub Container Registry integration
+
+### Key Dependencies
+
+- **HTTP Clients**:
+  - Ktor Client 2.3.7 for API communications
+  - OkHttp 4.12.0 for additional HTTP functionality
+  - Retrofit 2.9.0 for API integration
+
+- **Database**:
+  - Exposed 0.45.0 (ORM framework)
+  - SQLite JDBC 3.44.1.0
+  - HikariCP 5.0.1 for connection pooling
+
+- **Serialization**:
+  - Kotlinx Serialization 1.6.2
+  - Jackson Module Kotlin 2.15.3
+
+- **Messaging Platform**:
+  - Telegram Bots 6.8.0
 
 ## Project Structure
 
@@ -246,24 +409,32 @@ src/
 │           ├── config/      # Configuration classes and AI settings
 │           ├── data/        # Data access and character repository
 │           ├── model/       # Domain models and character templates
-│           └── service/     # Business logic and AI service integration
+│           ├── service/     # Business logic and AI service integration
+│           └── ui/         # User interface implementations
+│               ├── cli/    # Command-line interface
+│               └── telegram/# Telegram bot implementation
 └── test/
     └── kotlin/
         └── it/fscarponi/
-            ├── data/        # Repository tests
-            ├── model/       # Model tests
-            └── service/     # Service tests
+            ├── config/     # Configuration tests
+            ├── data/       # Repository tests
+            ├── model/      # Model tests
+            ├── service/    # Service tests
+            └── ui/        # Interface tests
 ```
 
 ### Configuration
 The application requires several configuration settings:
 
 1. **Environment Variables**:
-   - `HUGGINGFACE_API_TOKEN`: Your HuggingFace API access token
+   - `HUGGINGFACE_API_TOKEN`: Your HuggingFace API access token (required)
+   - `TELEGRAM_BOT_TOKEN`: Your Telegram Bot token (required for Telegram mode)
+   - `GITHUB_TOKEN`: GitHub token for Container Registry (optional, for Docker deployment)
 
 2. **Configuration Files**:
    - `local.properties`: Local development settings
    - `gradle.properties`: Gradle-specific configurations
+   - `characters.db`: SQLite database for character storage (auto-created)
 
 ### AI Model Details
 The system uses the Mistral-Nemo-Instruct model, which provides:
