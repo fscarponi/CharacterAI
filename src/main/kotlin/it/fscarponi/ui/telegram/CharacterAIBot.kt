@@ -1,15 +1,15 @@
 package it.fscarponi.telegram
 
-import it.fscarponi.ui.UIType
-import org.telegram.telegrambots.bots.TelegramLongPollingBot
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage
-import org.telegram.telegrambots.meta.api.methods.send.SendChatAction
-import org.telegram.telegrambots.meta.api.objects.Update
-import org.telegram.telegrambots.meta.api.methods.ActionType
 import it.fscarponi.data.CharacterRepository
-import it.fscarponi.service.HuggingFaceAIService
-import kotlinx.coroutines.runBlocking
 import it.fscarponi.model.Character
+import it.fscarponi.service.HuggingFaceAIService
+import it.fscarponi.ui.UIType
+import kotlinx.coroutines.runBlocking
+import org.telegram.telegrambots.bots.TelegramLongPollingBot
+import org.telegram.telegrambots.meta.api.methods.ActionType
+import org.telegram.telegrambots.meta.api.methods.send.SendChatAction
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage
+import org.telegram.telegrambots.meta.api.objects.Update
 
 class CharacterAIBot(
     private val characterRepository: CharacterRepository,
@@ -28,19 +28,24 @@ class CharacterAIBot(
         val messageText = update.message.text
 
         // Handle language selection
-        if (sessionManager.getCreationState(chatId) == CreationState.AWAITING_LANGUAGE_SELECTION && !messageText.startsWith("/")) {
+        if (sessionManager.getCreationState(chatId) == CreationState.AWAITING_LANGUAGE_SELECTION && !messageText.startsWith(
+                "/"
+            )
+        ) {
             handleLanguageSelection(chatId, messageText)
             return
         }
 
         // Handle creation flow if user is in creation state
-        if (sessionManager.getCreationState(chatId) != CreationState.NONE && 
-            sessionManager.getCreationState(chatId) != CreationState.AWAITING_LANGUAGE_SELECTION && 
-            !messageText.startsWith("/")) {
+        if (sessionManager.getCreationState(chatId) != CreationState.NONE &&
+            sessionManager.getCreationState(chatId) != CreationState.AWAITING_LANGUAGE_SELECTION &&
+            !messageText.startsWith("/")
+        ) {
             handleCreationFlow(chatId, messageText)
             return
         }
 
+        sendTypingAction(chatId)
         when {
             messageText.startsWith("/start") -> handleStart(chatId)
             messageText.startsWith("/help") -> handleHelp(chatId)
@@ -291,11 +296,14 @@ class CharacterAIBot(
 
             if (message.isNotEmpty()) {
                 message.toIntOrNull()?.let {
-                    characters.getOrNull(it-1)?.let { character ->
+                    characters.getOrNull(it - 1)?.let { character ->
                         sendMessage(chatId, "The character $it has been selected successfully.")
                         sessionManager.setSelectedCharacter(chatId, character = character)
                         sessionManager.setChatMode(chatId, true)
-                        sendMessage(chatId, "You can now start chatting directly with ${character.name}! Use /stopchat to exit chat mode.")
+                        sendMessage(
+                            chatId,
+                            "You can now start chatting directly with ${character.name}! Use /stopchat to exit chat mode."
+                        )
                     }
                 } ?: sendMessage(chatId, "The character id not found...")
             } else {
@@ -349,13 +357,13 @@ class CharacterAIBot(
 
     private fun sendTypingAction(chatId: String) {
         val action = SendChatAction()
-        action.setChatId(chatId)
+        action.chatId = chatId
         action.setAction(ActionType.TYPING)
         execute(action)
     }
 
+
     private fun sendMessage(chatId: String, text: String) {
-        sendTypingAction(chatId)
         val message = SendMessage()
         message.chatId = chatId
         message.text = text
