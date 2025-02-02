@@ -41,6 +41,14 @@ class TelegramSessionManager {
     fun getSelectedUIType(chatId: String): UIType {
         return getSession(chatId).selectedUIType
     }
+
+    fun setChatMode(chatId: String, enabled: Boolean) {
+        getSession(chatId).chatMode = enabled
+    }
+
+    fun isChatMode(chatId: String): Boolean {
+        return getSession(chatId).chatMode
+    }
 }
 
 data class UserSession(
@@ -48,7 +56,8 @@ data class UserSession(
     var creationState: CreationState = CreationState.NONE,
     var tempCharacterData: MutableMap<String, String> = mutableMapOf(),
     var selectedLanguage: String = "english",
-    var selectedUIType: UIType = UIType.CURRENT
+    var selectedUIType: UIType = UIType.CURRENT,
+    var chatMode: Boolean = false
 )
 
 enum class CreationState {

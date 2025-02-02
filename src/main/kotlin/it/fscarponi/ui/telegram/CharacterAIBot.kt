@@ -45,7 +45,9 @@ class CharacterAIBot(
             messageText.startsWith("/create") -> handleCreate(chatId)
             messageText.startsWith("/select") -> handleSelect(chatId, messageText.removePrefix("/select").trim())
             messageText.startsWith("/chat") -> handleChat(chatId, messageText.removePrefix("/chat").trim())
+            messageText.startsWith("/stopchat") -> handleStopChat(chatId)
             messageText.startsWith("/cancel") -> handleCancel(chatId)
+            sessionManager.isChatMode(chatId) -> handleChat(chatId, messageText)
             else -> sendMessage(chatId, "Please use one of the available commands. Type /help for more information.")
         }
     }
@@ -122,7 +124,7 @@ class CharacterAIBot(
             /help - Show available commands
             /create - Create a new character
             /select - Select an existing character
-            /chat <message> - Chat with the selected character
+            /stopchat - Exit chat mode and return to character selection
 
             Type /help to get started!
         """.trimIndent()
@@ -289,7 +291,8 @@ class CharacterAIBot(
                     characters.getOrNull(it-1)?.let { character ->
                         sendMessage(chatId, "The character $it has been selected successfully.")
                         sessionManager.setSelectedCharacter(chatId, character = character)
-                        sendMessage(chatId, "use /chat to start interaction!")
+                        sessionManager.setChatMode(chatId, true)
+                        sendMessage(chatId, "You can now start chatting directly with ${character.name}! Use /stopchat to exit chat mode.")
                     }
                 } ?: sendMessage(chatId, "The character id not found...")
             } else {
@@ -308,7 +311,7 @@ class CharacterAIBot(
 
     private fun handleChat(chatId: String, message: String) {
         if (message.isEmpty()) {
-            sendMessage(chatId, "Please provide a message after /chat command.")
+            sendMessage(chatId, "Please provide a message to chat.")
             return
         }
 
@@ -334,6 +337,11 @@ class CharacterAIBot(
                 e.printStackTrace() // For debugging purposes
             }
         }
+    }
+
+    private fun handleStopChat(chatId: String) {
+        sessionManager.setChatMode(chatId, false)
+        sendMessage(chatId, "Chat mode disabled. You can select another character with /select or use other commands.")
     }
 
     private fun sendMessage(chatId: String, text: String) {
