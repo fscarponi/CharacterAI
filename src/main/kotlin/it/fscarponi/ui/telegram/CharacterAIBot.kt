@@ -24,8 +24,16 @@ class CharacterAIBot(
         val chatId = update.message.chatId.toString()
         val messageText = update.message.text
 
+        // Handle language selection
+        if (sessionManager.getCreationState(chatId) == CreationState.AWAITING_LANGUAGE_SELECTION && !messageText.startsWith("/")) {
+            handleLanguageSelection(chatId, messageText)
+            return
+        }
+
         // Handle creation flow if user is in creation state
-        if (sessionManager.getCreationState(chatId) != CreationState.NONE && !messageText.startsWith("/")) {
+        if (sessionManager.getCreationState(chatId) != CreationState.NONE && 
+            sessionManager.getCreationState(chatId) != CreationState.AWAITING_LANGUAGE_SELECTION && 
+            !messageText.startsWith("/")) {
             handleCreationFlow(chatId, messageText)
             return
         }
@@ -42,8 +50,43 @@ class CharacterAIBot(
     }
 
     private fun handleStart(chatId: String) {
+        sessionManager.setCreationState(chatId, CreationState.AWAITING_LANGUAGE_SELECTION)
         val welcomeMessage = """
             Welcome to Character AI Bot! 🤖
+
+            Please select your preferred language:
+
+            1. English
+            2. Italian
+            3. Spanish
+            4. French
+
+            Reply with the number of your choice (1-4).
+            (Default: English)
+        """.trimIndent()
+
+        sendMessage(chatId, welcomeMessage)
+    }
+
+    private fun handleLanguageSelection(chatId: String, message: String) {
+        val languageMap = mapOf(
+            "1" to "english",
+            "2" to "italian",
+            "3" to "spanish",
+            "4" to "french"
+        )
+
+        val selectedLanguage = when {
+            message.trim() in languageMap.keys -> languageMap[message.trim()]!!
+            message.trim().lowercase() in languageMap.values -> message.trim().lowercase()
+            else -> "english" // Default to English for invalid inputs
+        }
+
+        sessionManager.setSelectedLanguage(chatId, selectedLanguage)
+        sessionManager.setCreationState(chatId, CreationState.NONE)
+
+        val confirmationMessage = """
+            Language set to: ${selectedLanguage.capitalize()}
 
             This bot allows you to interact with AI-powered characters.
 
@@ -56,7 +99,7 @@ class CharacterAIBot(
             Type /help to get started!
         """.trimIndent()
 
-        sendMessage(chatId, welcomeMessage)
+        sendMessage(chatId, confirmationMessage)
     }
 
     private fun handleHelp(chatId: String) {
@@ -93,6 +136,14 @@ class CharacterAIBot(
         val session = sessionManager.getSession(chatId)
 
         when (sessionManager.getCreationState(chatId)) {
+            CreationState.NONE -> {
+                sendMessage(chatId, "No active creation flow. Use /create to start creating a character.")
+            }
+
+            CreationState.AWAITING_LANGUAGE_SELECTION -> {
+                handleLanguageSelection(chatId, message)
+            }
+
             CreationState.AWAITING_NAME -> {
                 session.tempCharacterData["name"] = message
                 sessionManager.setCreationState(chatId, CreationState.AWAITING_ROLE)
@@ -243,7 +294,8 @@ class CharacterAIBot(
 
         runBlocking {
             try {
-                val response = aiService.generateResponse(selectedCharacter, message)
+                val selectedLanguage = sessionManager.getSelectedLanguage(chatId)
+                val response = aiService.generateResponse(selectedCharacter, message, selectedLanguage)
                 sendMessage(chatId, response)
             } catch (e: Exception) {
                 sendMessage(chatId, "Sorry, I encountered an error while generating the response. Please try again.")

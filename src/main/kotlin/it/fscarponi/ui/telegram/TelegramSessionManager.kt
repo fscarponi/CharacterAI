@@ -24,16 +24,26 @@ class TelegramSessionManager {
     fun getCreationState(chatId: String): CreationState {
         return getSession(chatId).creationState
     }
+
+    fun setSelectedLanguage(chatId: String, language: String) {
+        getSession(chatId).selectedLanguage = language
+    }
+
+    fun getSelectedLanguage(chatId: String): String {
+        return getSession(chatId).selectedLanguage
+    }
 }
 
 data class UserSession(
     var selectedCharacter: Character? = null,
     var creationState: CreationState = CreationState.NONE,
-    var tempCharacterData: MutableMap<String, String> = mutableMapOf()
+    var tempCharacterData: MutableMap<String, String> = mutableMapOf(),
+    var selectedLanguage: String = "english"
 )
 
 enum class CreationState {
     NONE,
+    AWAITING_LANGUAGE_SELECTION,
     AWAITING_NAME,
     AWAITING_ROLE,
     AWAITING_BACKGROUND,
