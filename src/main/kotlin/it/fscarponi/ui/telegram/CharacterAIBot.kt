@@ -3,7 +3,9 @@ package it.fscarponi.telegram
 import it.fscarponi.ui.UIType
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
+import org.telegram.telegrambots.meta.api.methods.send.SendChatAction
 import org.telegram.telegrambots.meta.api.objects.Update
+import org.telegram.telegrambots.meta.api.methods.ActionType
 import it.fscarponi.data.CharacterRepository
 import it.fscarponi.service.HuggingFaceAIService
 import kotlinx.coroutines.runBlocking
@@ -345,7 +347,15 @@ class CharacterAIBot(
         sendMessage(chatId, "Chat mode disabled. You can select another character with /select or use other commands.")
     }
 
+    private fun sendTypingAction(chatId: String) {
+        val action = SendChatAction()
+        action.setChatId(chatId)
+        action.setAction(ActionType.TYPING)
+        execute(action)
+    }
+
     private fun sendMessage(chatId: String, text: String) {
+        sendTypingAction(chatId)
         val message = SendMessage()
         message.chatId = chatId
         message.text = text
