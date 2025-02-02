@@ -1,5 +1,6 @@
 package it.fscarponi.telegram
 
+import it.fscarponi.ui.UIType
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Update
@@ -66,6 +67,33 @@ class CharacterAIBot(
         """.trimIndent()
 
         sendMessage(chatId, welcomeMessage)
+    }
+
+    private fun handleUISelection(chatId: String, message: String) {
+        val uiType = when (message.trim()) {
+            "1" -> UIType.CURRENT
+            "2" -> UIType.NEW
+            else -> UIType.CURRENT // Default to Current UI for invalid inputs
+        }
+
+        sessionManager.setSelectedUIType(chatId, uiType)
+        sessionManager.setCreationState(chatId, CreationState.AWAITING_LANGUAGE_SELECTION)
+
+        val uiConfirmationMessage = """
+            UI version set to: $uiType
+
+            Now, please select your preferred language:
+
+            1. English
+            2. Italian
+            3. Spanish
+            4. French
+
+            Reply with the number of your choice (1-4).
+            (Default: English)
+        """.trimIndent()
+
+        sendMessage(chatId, uiConfirmationMessage)
     }
 
     private fun handleLanguageSelection(chatId: String, message: String) {
@@ -138,6 +166,10 @@ class CharacterAIBot(
         when (sessionManager.getCreationState(chatId)) {
             CreationState.NONE -> {
                 sendMessage(chatId, "No active creation flow. Use /create to start creating a character.")
+            }
+
+            CreationState.AWAITING_UI_SELECTION -> {
+                handleUISelection(chatId, message)
             }
 
             CreationState.AWAITING_LANGUAGE_SELECTION -> {
