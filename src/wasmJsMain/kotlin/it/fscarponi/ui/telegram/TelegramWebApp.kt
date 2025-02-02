@@ -1,5 +1,4 @@
-@file:JsModule("telegram-web-app")
-@file:JsNonModule
+@file:JsModule("@twa-dev/sdk")
 
 package it.fscarponi.ui.telegram
 
@@ -34,7 +33,7 @@ external interface WebApp {
     val isExpanded: Boolean
     val viewportHeight: Double
     val viewportStableHeight: Double
-    
+
     fun ready()
     fun expand()
     fun close()

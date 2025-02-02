@@ -4,6 +4,18 @@ import androidx.compose.runtime.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.w3c.dom.Window
+import kotlin.js.JsName
+
+external val window: Window
+
+private val telegramWebAppCheck: Boolean = js("typeof window.Telegram!=='undefined'&&typeof window.Telegram.WebApp!=='undefined'")
+
+private fun checkTelegramWebApp(): Boolean = try {
+    telegramWebAppCheck
+} catch (e: Throwable) {
+    false
+}
 
 class WebAppController {
     private val _isInitialized = MutableStateFlow(false)
@@ -18,7 +30,7 @@ class WebAppController {
     fun initialize() {
         try {
             // Verify we're in Telegram WebApp environment
-            if (js("typeof window.Telegram?.WebApp === 'undefined'") as Boolean) {
+            if (!checkTelegramWebApp()) {
                 _error.value = "This app can only be opened in Telegram"
                 return
             }

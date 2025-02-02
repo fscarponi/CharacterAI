@@ -1,7 +1,7 @@
 plugins {
-    kotlin("multiplatform") version "1.9.20"
-    kotlin("plugin.serialization") version "1.9.20"
-    id("org.jetbrains.compose") version "1.5.10"
+    kotlin("multiplatform") version "1.9.22"
+    kotlin("plugin.serialization") version "1.9.22"
+    id("org.jetbrains.compose") version "1.7.3"
 }
 
 group = "it.fscarponi"
@@ -15,7 +15,10 @@ repositories {
 }
 
 kotlin {
-    @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
+    @OptIn(
+        org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class,
+        org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalDistributionDsl::class
+    )
     wasmJs {
         moduleName = "telegramWebApp"
         browser {
@@ -23,9 +26,12 @@ kotlin {
                 outputFileName = "telegramWebApp.js"
                 devServer = (devServer ?: org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig.DevServer()).copy(
                     static = (devServer?.static ?: mutableListOf()).apply { 
-                        add(project.projectDir.path)
+                        add(project.projectDir.resolve("src/wasmJsMain/resources").path)
                     }
                 )
+            }
+            distribution {
+                outputDirectory = project.projectDir.resolve("build/dist/wasm")
             }
         }
         binaries.executable()
@@ -54,6 +60,16 @@ kotlin {
             }
         }
 
+        val wasmJsMain by getting {
+            dependencies {
+                implementation(compose.runtime)
+                implementation(compose.ui)
+                implementation(compose.foundation)
+                implementation(compose.material3)
+                implementation(npm("@twa-dev/sdk", "^6.9.0"))
+            }
+        }
+
         val jsMain by getting {
             dependencies {
                 implementation(compose.html.core)
@@ -66,17 +82,6 @@ kotlin {
             }
         }
 
-        val wasmJsMain by getting {
-            dependencies {
-                implementation(compose.html.core)
-            }
-        }
-    }
-}
-
-compose {
-    experimental {
-        web.application {}
     }
 }
 

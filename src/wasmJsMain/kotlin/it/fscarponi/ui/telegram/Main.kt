@@ -6,8 +6,10 @@ import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.jetbrains.compose.web.renderComposable
-import org.jetbrains.compose.web.dom.Img
+import org.w3c.dom.*
+import kotlinx.browser.document
+import org.w3c.dom.HTMLImageElement
+
 
 private val controller = WebAppController()
 
@@ -80,16 +82,32 @@ fun MainContent() {
     ) {
         if (user != null) {
             if (!user.photo_url.isNullOrEmpty()) {
-                Img(
-                    src = user.photo_url,
-                    attrs = {
-                        style {
-                            property("width", "64px")
-                            property("height", "64px")
-                            property("border-radius", "50%")
+                Box(
+                    modifier = Modifier.size(64.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    DisposableEffect(Unit) {
+                        val containerId = "user-photo-${user.id}"
+                        val container = document.createElement("div")
+                        container.id = containerId
+
+                        val img = document.createElement("img") as HTMLImageElement
+                        img.src = user.photo_url!!
+                        img.style.apply {
+                            width = "64px"
+                            height = "64px"
+                            borderRadius = "50%"
+                            objectFit = "cover"
+                        }
+
+                        container.appendChild(img)
+                        document.getElementById("root")?.appendChild(container)
+
+                        onDispose {
+                            document.getElementById(containerId)?.remove()
                         }
                     }
-                )
+                }
             }
 
             Text(
@@ -108,11 +126,5 @@ fun MainContent() {
         ) {
             Text("Close WebApp")
         }
-    }
-}
-
-fun main() {
-    renderComposable(rootElementId = "root") {
-        App()
     }
 }
