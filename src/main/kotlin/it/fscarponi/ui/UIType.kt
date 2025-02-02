@@ -2,7 +2,8 @@ package it.fscarponi.ui
 
 enum class UIType(val displayName: String, val isExperimental: Boolean) {
     CURRENT("Current UI", false),
-    NEW("New UI (Experimental)", true);
+    NEW("New UI (Experimental)", true),
+    WEB_UI("Web UI (Experimental)", true);
 
     override fun toString(): String {
         return if (isExperimental) {

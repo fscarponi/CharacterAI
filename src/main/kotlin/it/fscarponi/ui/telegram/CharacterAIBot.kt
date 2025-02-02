@@ -1,4 +1,4 @@
-package it.fscarponi.telegram
+package it.fscarponi.ui.telegram
 
 import it.fscarponi.ui.UIType
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
@@ -6,8 +6,9 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Update
 import it.fscarponi.data.CharacterRepository
 import it.fscarponi.service.HuggingFaceAIService
-import kotlinx.coroutines.runBlocking
 import it.fscarponi.model.Character
+import kotlinx.coroutines.*
+import java.util.*
 
 class CharacterAIBot(
     private val characterRepository: CharacterRepository,
@@ -51,19 +52,18 @@ class CharacterAIBot(
     }
 
     private fun handleStart(chatId: String) {
-        sessionManager.setCreationState(chatId, CreationState.AWAITING_LANGUAGE_SELECTION)
+        sessionManager.setCreationState(chatId, CreationState.AWAITING_UI_SELECTION)
         val welcomeMessage = """
             Welcome to Character AI Bot! 🤖
 
-            Please select your preferred language:
+            Please select your preferred UI version:
 
-            1. English
-            2. Italian
-            3. Spanish
-            4. French
+            1. Current UI (Stable)
+            2. New UI (Experimental)
+            3. Web UI (Experimental)
 
-            Reply with the number of your choice (1-4).
-            (Default: English)
+            Reply with the number of your choice (1-3).
+            (Default: Current UI)
         """.trimIndent()
 
         sendMessage(chatId, welcomeMessage)
@@ -73,14 +73,25 @@ class CharacterAIBot(
         val uiType = when (message.trim()) {
             "1" -> UIType.CURRENT
             "2" -> UIType.NEW
+            "3" -> UIType.WEB_UI
             else -> UIType.CURRENT // Default to Current UI for invalid inputs
         }
 
         sessionManager.setSelectedUIType(chatId, uiType)
         sessionManager.setCreationState(chatId, CreationState.AWAITING_LANGUAGE_SELECTION)
 
+        val webUiInstructions = if (uiType == UIType.WEB_UI) {
+            """
+            |
+            |To access the Web UI, please visit:
+            |http://localhost:8080/chat?chatId=$chatId
+            |
+            |You can continue using the bot here or interact through the web interface.
+            """.trimMargin()
+        } else ""
+
         val uiConfirmationMessage = """
-            UI version set to: $uiType
+            UI version set to: $uiType$webUiInstructions
 
             Now, please select your preferred language:
 

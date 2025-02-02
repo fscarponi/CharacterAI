@@ -1,13 +1,14 @@
-package it.fscarponi.telegram
+package it.fscarponi.ui.telegram
 
 import it.fscarponi.model.Character
 import it.fscarponi.ui.UIType
+import java.util.HashMap
 
 class TelegramSessionManager {
-    private val userSessions = mutableMapOf<String, UserSession>()
+    private val userSessions = HashMap<String, UserSession>()
 
     fun getSession(chatId: String): UserSession {
-        return userSessions.getOrPut(chatId) { UserSession() }
+        return userSessions.computeIfAbsent(chatId) { UserSession() }
     }
 
     fun setSelectedCharacter(chatId: String, character: Character) {
@@ -46,7 +47,7 @@ class TelegramSessionManager {
 data class UserSession(
     var selectedCharacter: Character? = null,
     var creationState: CreationState = CreationState.NONE,
-    var tempCharacterData: MutableMap<String, String> = mutableMapOf(),
+    var tempCharacterData: HashMap<String, String> = HashMap(),
     var selectedLanguage: String = "english",
     var selectedUIType: UIType = UIType.CURRENT
 )
