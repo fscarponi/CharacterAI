@@ -256,6 +256,7 @@ class CharacterAIBot(
                             chatId, """
                             Character created successfully! 
                             You can now start chatting with ${character.name} using the /chat command.
+                            The curtain opens!
                         """.trimIndent()
                         )
                     }
